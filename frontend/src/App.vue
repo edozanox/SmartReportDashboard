@@ -1,4 +1,4 @@
-LO<script setup lang="ts">
+<script setup lang="ts">
 import HeaderBI from './components/HeaderBI.vue';
 import MapItem from './components/MapItem.vue';
 import { loadFonts } from 'bootstrap-italia'
