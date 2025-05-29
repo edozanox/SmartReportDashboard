@@ -20,11 +20,11 @@ const mapStore = useMapStore();
             <label for="defaultSelect">Tipo segnalazione</label>
             <select id="defaultSelect" class="form-control">
               <option value="">Seleziona una voce</option>
-              <option value="Value 1">Opzione 1</option>
-              <option value="Value 2">Opzione 2</option>
-              <option value="Value 3">Opzione 3</option>
-              <option value="Value 4">Opzione 4</option>
-              <option value="Value 5">Opzione 5</option>
+              <option value="OP_VIA">Manutenzione - sicurezza</option>
+              <option value="OP_STR">Strade - segnaletica - viabilità</option>
+              <option value="OP_VRD">Verde urbano</option>
+              <option value="OP_URB">Rifiuti</option>
+              <option value="OP_SOS">Ordine pubblico</option>
             </select>
           </div>
         </div>
@@ -39,11 +39,19 @@ const mapStore = useMapStore();
         <label for="nome" class="">Descrizione</label>
         <textarea class="form-control" id="descrizione" rows="4" maxlength="5000"></textarea>
       </div>
-    </div>
-    <div class="spacer"></div>
-    <div class="row">
-      <div class="col-12 col-md-12">
-                
+      <div class="spacer"></div>
+      <div class="col-12 col-md-6">
+        <label for="email" class="">Email</label>
+        <input type="email" class="form-control" id="email">  
+      </div>    
+      <div class="col-12 col-md-6">
+        <label for="telefono" class="">Telefono</label>
+        <input type="tel" class="form-control" id="telefono">
+      </div>
+    </div>    
+ 
+    <!-- <div class="row">
+      <div class="col-12 col-md-12">                
           <input type="file" name="upload1" id="upload1" class="upload" />
           <label for="upload1">
             <svg class="icon icon-sm" aria-hidden="true"><use href="/bi-icons.svg#it-upload"></use></svg>
@@ -53,10 +61,10 @@ const mapStore = useMapStore();
             
           </ul>
       </div>
-    </div>
+    </div> -->
     <div class="row">
       <div class="col-12">
-        <button class="btn btn-primary mt-3" type="submit">Invia form</button>
+        <button class="btn btn-primary mt-3" type="submit">Invia segnalazione</button>
       </div>
     </div>
   </div>
