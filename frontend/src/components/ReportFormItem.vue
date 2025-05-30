@@ -1,9 +1,49 @@
 <script setup lang="ts">
+import { Notification } from 'bootstrap-italia';
 import { useMapStore } from '@/stores/map';
+import { ref } from 'vue';
+import axios from 'axios';
+
 const mapStore = useMapStore();
+const api = axios.create({
+  baseURL: 'http://localhost:3000'
+})
+const tipo = ref('');
+const descrizione = ref('');
+
+async function inviaReport(){
+  try {  
+    const request = {tipo: tipo.value, indirizzo: mapStore.indirizzo, descrizione: descrizione.value }
+    console.log(request);
+    const response = await api.post('/api/reports/send', JSON.stringify(request));
+    
+    let element = document.getElementById('report-ok');
+    if(element) {
+      element.style.display = 'block';
+      new Notification(element, {timeout: 5000});
+    }
+     
+  } catch {
+
+    let element = document.getElementById('report-ko');
+    if(element) {
+      element.style.display = 'block';
+      new Notification(element, {timeout: 5000});
+    }
+    
+  }
+
+}
 </script>
 
 <template>
+  <div class="notification top-fix with-icon success" role="alert" id="report-ok" style="display: none;">
+    <h2 class="h5"><svg class="icon"><use href="/bi-icons.svg#it-check-circle"></use></svg>Segnalazione inviata con successo!</h2>
+  </div>
+  <div class="notification top-fix with-icon error" role="alert" id="report-ko" style="display: none;">
+    <h2 class="h5"><svg class="icon"><use href="/bi-icons.svg#it-close-circle"></use></svg>Errore nell'invio della segnalazione</h2>
+  </div>
+  
  
   <div class="container mb-5 mt-2 pt-2">
     <div class="row">      
@@ -18,7 +58,7 @@ const mapStore = useMapStore();
           <div class="form-group">
           <div class="select-wrapper">
             <label for="defaultSelect">Tipo segnalazione</label>
-            <select id="defaultSelect" class="form-control">
+            <select id="defaultSelect" class="form-control" v-model="tipo">
               <option value="">Seleziona una voce</option>
               <option value="OP_VIA">Manutenzione - sicurezza</option>
               <option value="OP_STR">Strade - segnaletica - viabilità</option>
@@ -37,7 +77,7 @@ const mapStore = useMapStore();
       </div>
       <div class="col-12 col-md-12">
         <label for="nome" class="">Descrizione</label>
-        <textarea class="form-control" id="descrizione" rows="4" maxlength="5000"></textarea>
+        <textarea class="form-control" id="descrizione" rows="4" maxlength="5000" v-model="descrizione"></textarea>
       </div>
       <div class="spacer"></div>
       <div class="col-12 col-md-6">
@@ -64,7 +104,7 @@ const mapStore = useMapStore();
     </div> -->
     <div class="row">
       <div class="col-12">
-        <button class="btn btn-primary mt-3" type="submit">Invia segnalazione</button>
+        <button class="btn btn-primary mt-3" type="submit" @click="inviaReport()">Invia segnalazione</button>
       </div>
     </div>
   </div>
