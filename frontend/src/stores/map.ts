@@ -10,5 +10,5 @@ export const useMapStore = defineStore('map', () => {
     indirizzo.value = addr;
     coordinate.value = coords;
  }
- return { indirizzo, setMapData }
+ return { indirizzo, coordinate, setMapData }
 });

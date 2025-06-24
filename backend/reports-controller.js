@@ -2,12 +2,12 @@ const connection = require('./db');
 
 module.exports.postReport = async function (req, res) {
     try {
-        console.log(req);
-        const {categoria, indirizzo, descrizione, coordinate, email, telefono} = req.body;
+        const uuid = crypto.randomUUID();    
+        const {id, categoria, indirizzo, descrizione, coordinate, data_inserimento, data_aggiornamento, assegnatario, status, email, telefono, annotazioni} = req.body;
         const result = connection.query(
-            'INSERT INTO reports (`categoria`, `indirizzo`, `descrizione`, `coordinate`, `data_inserimento`, `email`, `telefono`) VALUES (?, ?, ?, ?, ?, ?)',
-            [categoria, indirizzo, descrizione, coordinate, email, telefono],
-        );
+            'INSERT INTO reports (`id`, `categoria`, `indirizzo`, `descrizione`, `coordinate`, `data_inserimento`, `data_aggiornamento`, `assegnatario`, `status`, `email`, `telefono`, `annotazioni`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            [uuid, categoria, indirizzo, descrizione, coordinate, data_inserimento, data_aggiornamento, assegnatario, status, email, telefono, annotazioni],
+        );        
         return {success: true}       
     }
     catch  (error) {

@@ -10,12 +10,17 @@ const api = axios.create({
 })
 const tipo = ref('');
 const descrizione = ref('');
+const email = ref('');
+const telefono = ref('');
 
 async function inviaReport(){
   try {  
-    const request = {tipo: tipo.value, indirizzo: mapStore.indirizzo, descrizione: descrizione.value }
-    console.log(request);
-    const response = await api.post('/api/reports/send', JSON.stringify(request));
+    const request =
+    {id: null, categoria: tipo.value, indirizzo: mapStore.indirizzo, descrizione: descrizione.value, coordinate: mapStore.coordinate,
+      data_inserimento: Date.now(), data_aggiornamento: null, assegnatario: null, status: null,
+      email: email.value, telefono: telefono.value, annotazioni: null};
+    
+    const response = await api.post('/api/reports/send', request);
     
     let element = document.getElementById('report-ok');
     if(element) {
@@ -82,11 +87,11 @@ async function inviaReport(){
       <div class="spacer"></div>
       <div class="col-12 col-md-6">
         <label for="email" class="">Email</label>
-        <input type="email" class="form-control" id="email">  
+        <input type="email" class="form-control" v-model="email">  
       </div>    
       <div class="col-12 col-md-6">
         <label for="telefono" class="">Telefono</label>
-        <input type="tel" class="form-control" id="telefono">
+        <input type="tel" class="form-control" v-model="telefono">
       </div>
     </div>    
  
