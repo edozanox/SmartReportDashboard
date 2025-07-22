@@ -19,20 +19,27 @@ app.use(express.urlencoded({ extended: true }));
 app.post("/api/reports/send", async (req, res) => {
     console.log("Creazione report...");
     try {
-        controller.postReport(req);
+        await controller.postReport(req);
+        console.log("Report creato con successo!");
         res.status(201).send("Report creato con successo!");
     } catch {
         res.status(500).send("Errore creazione report");
     }
 });
 
-app.get('/', (req, res) => {
-  res.send('Server is running, yuppie!!!');
+//GET allReports
+app.get("/api/reports/getAll", async (req, res) => {
+    console.log("Recupero di tutti i reports...");
+    try {
+        var reports = await controller.allReports(req);        
+        res.json({success: true, data: reports});
+    } catch (error) {
+        res.json({success: false, message: error.message});
+    }
 });
 
-//GET allReports
-app.get("/api/reports/getAll", (req, res, next) => {
- res.status(200).send("Verrà tornata la lista dei reports");
+app.get('/', (req, res) => {
+  res.send('Server is running, yuppie!!!');
 });
 
 app.use(function(req, res, next) {

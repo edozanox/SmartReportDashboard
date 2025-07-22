@@ -2,7 +2,7 @@
 import { Notification } from 'bootstrap-italia';
 import { useMapStore } from '@/stores/map';
 import { ref } from 'vue';
-import axios from 'axios';
+import axios, { HttpStatusCode } from 'axios';
 
 const mapStore = useMapStore();
 const api = axios.create({
@@ -17,17 +17,19 @@ async function inviaReport(){
   try {  
     const request =
     {id: null, categoria: tipo.value, indirizzo: mapStore.indirizzo, descrizione: descrizione.value, coordinate: mapStore.coordinate,
-      data_inserimento: Date.now(), data_aggiornamento: null, assegnatario: null, status: null,
+      data_inserimento: new Date(), data_aggiornamento: null, assegnatario: null, status: null,
       email: email.value, telefono: telefono.value, annotazioni: null};
     
     const response = await api.post('/api/reports/send', request);
-    
-    let element = document.getElementById('report-ok');
-    if(element) {
-      element.style.display = 'block';
-      new Notification(element, {timeout: 5000});
-    }
-     
+    if(response.status == HttpStatusCode.Created)
+    {
+      let element = document.getElementById('report-ok');
+      
+      if(element) {
+        element.style.display = 'block';
+        new Notification(element, {timeout: 5000});
+      }
+    }     
   } catch {
 
     let element = document.getElementById('report-ko');

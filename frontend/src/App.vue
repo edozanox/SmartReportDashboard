@@ -4,6 +4,7 @@ import MapItem from './components/MapItem.vue';
 import { loadFonts } from 'bootstrap-italia'
 import 'mapbox-gl/dist/mapbox-gl.css';
 import ReportFormItem from './components/ReportFormItem.vue';
+import ReportsList from './components/ReportsList.vue';
 
 loadFonts('./fonts');
 
@@ -23,14 +24,15 @@ loadFonts('./fonts');
       <!-- COLONNA DESTRA -->
      <div class="col-md-6 d-flex flex-column">
       <!-- Riga superiore (2/3 dell'altezza) -->
+      <ReportsList/>
       <div class="flex-grow-2 ">
-        <ReportFormItem/>
+        
       </div>
 
       <!-- Riga inferiore (1/3 dell'altezza) -->
-      <div class="flex-grow-1 bg-success">
-        Riga inferiore (1/3)
-      </div>
+      <!-- <div class="flex-grow-1 bg-success"> -->
+        <!-- Riga inferiore (1/3) -->
+      <!-- </div> -->
     </div>
 
     </div>

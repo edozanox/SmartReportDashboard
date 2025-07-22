@@ -6,7 +6,7 @@ module.exports.postReport = async function (req, res) {
         const {id, categoria, indirizzo, descrizione, coordinate, data_inserimento, data_aggiornamento, assegnatario, status, email, telefono, annotazioni} = req.body;
         const result = connection.query(
             'INSERT INTO reports (`id`, `categoria`, `indirizzo`, `descrizione`, `coordinate`, `data_inserimento`, `data_aggiornamento`, `assegnatario`, `status`, `email`, `telefono`, `annotazioni`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-            [uuid, categoria, indirizzo, descrizione, coordinate, data_inserimento, data_aggiornamento, assegnatario, status, email, telefono, annotazioni],
+            [uuid, categoria, indirizzo, descrizione, JSON.stringify(coordinate), data_inserimento, data_aggiornamento, assegnatario, status, email, telefono, annotazioni],
         );        
         return {success: true}       
     }
@@ -16,13 +16,8 @@ module.exports.postReport = async function (req, res) {
 }
 
 module.exports.allReports = async function (req, res) {
-    connection.query(
-        'SELECT id, categoria, coordinate, data_inserimento FROM reports',
-        {},
-        function(err, results, fields) {
-            res.json(results);
-        }
-    )
+   const [reports] = await (await connection).query('SELECT * FROM reports');   
+   return reports;
 }
 
 
