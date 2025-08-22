@@ -1,3 +1,5 @@
+import { ReportStatus } from '@/models/report-status.enum'
+
 export class Report {
   public id: number;
   public categoria: string;
@@ -7,7 +9,7 @@ export class Report {
   public data_inserimento: Date;
   public data_aggiornamento: Date | null;
   public assegnatario: string | null;
-  public status: string | null;
+  public status: ReportStatus | null;
   public email: string;
   public telefono: string;
   public annotazioni: string | null;
@@ -21,7 +23,7 @@ export class Report {
     data_inserimento: Date,
     data_aggiornamento: Date | null,
     assegnatario: string | null,
-    status: string | null,
+    status: ReportStatus | null,
     email: string,
     telefono: string,
     annotazioni: string | null

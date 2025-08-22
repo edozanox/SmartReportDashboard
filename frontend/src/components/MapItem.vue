@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useMapStore } from '@/stores/map';
-import mapboxgl, { LngLat, Marker } from 'mapbox-gl';
-import { onMounted, provide, ref } from 'vue';
+import mapboxgl, { LngLat } from 'mapbox-gl';
+import { onMounted, watch } from 'vue';
 
 const mapStore = useMapStore();
 var marker: mapboxgl.Marker | null = null;
@@ -17,6 +17,18 @@ mapboxgl.accessToken = mapbox_token;
       center: [11.2718593191134, 44.5525618278896], // starting position [lng, lat]
       zoom: 12, // starting zoom
   });
+
+  //Aggiorna i marker sulla mappa quando cambia il reactive markers
+  watch(() => mapStore.markers, (newMarkers: LngLat[]) => {  
+    console.log('Sono nel watch dei markers :)');
+    console.log('Markers aggiornati:', newMarkers);
+    //Ciclo per aggiungere markers sulla mappa
+    for(const item of newMarkers) {
+      marker = new mapboxgl.Marker()
+        .setLngLat(item)
+        .addTo(map);
+      }
+  }, { deep: true, immediate: true });
 
   map.on('click', function (e) {
 
@@ -49,6 +61,8 @@ mapboxgl.accessToken = mapbox_token;
   return {};
 })
 });
+
+
 </script>
 <template>
   <div id='map' style="width: 100%; height: 100%;"></div>

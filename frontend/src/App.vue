@@ -17,7 +17,7 @@ loadFonts('./fonts');
     <div class="row h-100">
       
       <!-- COLONNA SINISTRA -->
-      <div class="col-6 d-flex">
+      <div class="col-4 d-flex">
         <MapItem/>
       </div>
 
@@ -25,6 +25,7 @@ loadFonts('./fonts');
      <div class="col-md-6 d-flex flex-column">
       <!-- Riga superiore (2/3 dell'altezza) -->
       <ReportsList/>
+      <!-- <ReportFormItem/> -->
       <div class="flex-grow-2 ">
         
       </div>
