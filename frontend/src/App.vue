@@ -3,7 +3,7 @@ import HeaderBI from './components/HeaderBI.vue';
 import MapItem from './components/MapItem.vue';
 import { loadFonts } from 'bootstrap-italia'
 import 'mapbox-gl/dist/mapbox-gl.css';
-import ReportFormItem from './components/ReportFormItem.vue';
+import ExistingReportItem from './components/ExistingReportItem.vue';
 import ReportsList from './components/ReportsList.vue';
 
 loadFonts('./fonts');
@@ -11,6 +11,7 @@ loadFonts('./fonts');
 </script>
 
 <template>
+
   <HeaderBI/>
 
   <div class="container-fluid full-height">
@@ -22,9 +23,9 @@ loadFonts('./fonts');
       </div>
 
       <!-- COLONNA DESTRA -->
-     <div class="col-md-6 d-flex flex-column">
-      <!-- Riga superiore (2/3 dell'altezza) -->
-      <ReportsList/>
+     <div class="col-md-8 d-flex flex-column">
+      <!-- Riga superiore (2/3 dell'altezza) -->      
+       <RouterView></RouterView>
       <!-- <ReportFormItem/> -->
       <div class="flex-grow-2 ">
         

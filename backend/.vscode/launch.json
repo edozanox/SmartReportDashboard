@@ -4,10 +4,15 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "Debug Express Server",
-      "program": "${workspaceFolder}/app.js",
-      "runtimeArgs": ["--inspect-brk"],
-      "skipFiles": ["<node_internals>/**"]
+      "name": "Backend Node Debug",
+      "skipFiles": [
+        "<node_internals>/**"
+      ],
+      // ✨ Importante: Sostituisci con il percorso del tuo file di ingresso del backend
+      "program": "${workspaceFolder}/app.js", 
+      "console": "integratedTerminal",
+      "runtimeArgs": ["--inspect"]
+      // Se non funziona, potresti dover aggiungere: "runtimeArgs": ["--inspect"]
     }
   ]
 }

@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { Report } from '../models/report.model';
 import { onMounted, ref } from 'vue';
-import { LngLat } from 'mapbox-gl';
-import { useMapStore } from '@/stores/map';
+import { useMapStore, useReportStore } from '@/stores/map';
+import { ReportStatus } from '@/models/report-status.enum';
+import router from '@/router';
 
 const mapActions = useMapStore();
+const reportStore = useReportStore();
 const reports = ref([] as Report[]);
 // const api = axios.create({
 //   baseURL: 'http://localhost:3000'
@@ -13,17 +15,14 @@ const reports = ref([] as Report[]);
 onMounted(async () =>{
 try {
   const response = await fetch('http://localhost:3000/api/reports/getAll');
-  reports.value = (await response.json()).data;
+  reports.value = (await response.json()).data;  
   for (const report of reports.value) {
-    const strCoord = report.coordinate;
-    const coords = JSON.parse(strCoord);
-    const lngLat = new LngLat(coords.lng, coords.lat);
-    mapActions.addMarker(lngLat);
+    mapActions.addMarker(report.coordinate);
   }
-  console.log(mapActions.markers);
 } catch (error) {
     console.error('Error fetching reports:', error);
-  }
+}
+
 });
 
 const formatDate = (iso_date: any) => {
@@ -31,15 +30,18 @@ const formatDate = (iso_date: any) => {
   return date.toLocaleDateString('it-IT')
 }
 
+function apriDettaglioSegnalazione(report: Report) {
+  reportStore.setReport(report);
+  router.push({name: 'dettagli-segnalazione' });
+}
 
 </script>
 
 <template>
-<h3>Elenco segnalazioni</h3>
+<!-- <h3>Segnalazioni</h3> -->
   <table class="table">
     <thead>
-      <tr>
-        <th scope="col">ID</th>
+      <tr>        
         <th scope="col">Categoria</th>
         <th scope="col">Descrizione</th>
         <th scope="col">Indirizzo</th>
@@ -49,16 +51,42 @@ const formatDate = (iso_date: any) => {
       </tr>
     </thead>
     <tbody>
-      <tr v-for="x in reports" :key="x.id">
-        <td>{{ x.id }}</td>
+      <tr v-for="x in reports" :key="x.id">        
         <td>{{ x.categoria }}</td>
         <td>{{ x.descrizione }}</td>
         <td>{{ x.indirizzo }}</td>        
         <td>{{ formatDate(x.data_inserimento)}}</td>
-        <td>{{ x.status }}</td>
         <td>
-          <svg class="icon"><use href="/bi-icons.svg#it-map-marker-circle"></use></svg>
-          <svg class="icon"><use href="/bi-icons.svg#it-arrow-right-circle"></use></svg>
+          <span v-if="x.status === ReportStatus.OPEN">
+          <svg class="icon icon-secondary"><use href="/bi-icons.svg#it-plus-circle"></use></svg>
+          Aperta
+          </span>
+
+          <span v-if="x.status === ReportStatus.IN_PROGRESS">
+          <svg class="icon icon-primary"><use href="/bi-icons.svg#it-clock"></use></svg>
+          In lavorazione
+          </span>
+
+          <span v-if="x.status === ReportStatus.RESOLVED">
+          <svg class="icon icon-success"><use href="/bi-icons.svg#it-check-circle"></use></svg>
+          Risolta
+          </span>            
+          
+          <span v-if="x.status === ReportStatus.REFUSED">
+          <svg class="icon icon-danger"><use href="/bi-icons.svg#it-close-circle"></use></svg>
+          Chiusa
+          </span>
+          
+        </td>
+        <td>
+          <button class="btn btn btn-primary" 
+          data-bs-toggle="tooltip" data-bs-placement="top" title="Apri segnalazione" 
+          @click="apriDettaglioSegnalazione(x)">
+          <svg class="icon icon-white">
+            <use href="/bi-icons.svg#it-arrow-right-circle"></use>
+          </svg>
+        </button>
+          
         </td>
       </tr>
     </tbody>

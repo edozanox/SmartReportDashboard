@@ -3,6 +3,7 @@ import { Notification } from 'bootstrap-italia';
 import { useMapStore } from '@/stores/map';
 import { ref } from 'vue';
 import axios, { HttpStatusCode } from 'axios';
+import { ReportStatus } from '@/models/report-status.enum';
 
 const mapStore = useMapStore();
 const api = axios.create({
@@ -17,7 +18,7 @@ async function inviaReport(){
   try {  
     const request =
     {id: null, categoria: tipo.value, indirizzo: mapStore.indirizzo, descrizione: descrizione.value, coordinate: mapStore.coordinate,
-      data_inserimento: new Date(), data_aggiornamento: null, assegnatario: null, status: null,
+      data_inserimento: new Date().toISOString().slice(0, 19).replace('T', ' '), data_aggiornamento: null, assegnatario: null, status: ReportStatus.OPEN,
       email: email.value, telefono: telefono.value, annotazioni: null};
     
     const response = await api.post('/api/reports/send', request);

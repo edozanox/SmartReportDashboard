@@ -19,7 +19,7 @@ mapboxgl.accessToken = mapbox_token;
   });
 
   //Aggiorna i marker sulla mappa quando cambia il reactive markers
-  watch(() => mapStore.markers, (newMarkers: LngLat[]) => {  
+  watch(() => mapStore.markers, (newMarkers: LngLat[]) => {
     console.log('Sono nel watch dei markers :)');
     console.log('Markers aggiornati:', newMarkers);
     //Ciclo per aggiungere markers sulla mappa

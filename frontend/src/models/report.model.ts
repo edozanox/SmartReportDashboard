@@ -1,14 +1,15 @@
 import { ReportStatus } from '@/models/report-status.enum'
+import type { LngLat } from 'mapbox-gl';
 
 export class Report {
   public id: number;
   public categoria: string;
   public indirizzo: string;
   public descrizione: string;
-  public coordinate: string;
+  public coordinate: LngLat;
   public data_inserimento: Date;
   public data_aggiornamento: Date | null;
-  public assegnatario: string | null;
+  public id_gruppo: number | null;
   public status: ReportStatus | null;
   public email: string;
   public telefono: string;
@@ -19,10 +20,10 @@ export class Report {
     categoria: string,
     indirizzo: string,
     descrizione: string,
-    coordinate: string,
+    coordinate: LngLat,
     data_inserimento: Date,
     data_aggiornamento: Date | null,
-    assegnatario: string | null,
+    id_gruppo: number | null,
     status: ReportStatus | null,
     email: string,
     telefono: string,
@@ -35,7 +36,7 @@ export class Report {
     this.coordinate = coordinate;
     this.data_inserimento = data_inserimento;
     this.data_aggiornamento = data_aggiornamento;
-    this.assegnatario = assegnatario;
+    this.id_gruppo = id_gruppo;
     this.status = status;
     this.email = email;
     this.telefono = telefono;
