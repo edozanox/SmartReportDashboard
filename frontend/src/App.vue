@@ -5,8 +5,10 @@ import { loadFonts } from 'bootstrap-italia'
 import 'mapbox-gl/dist/mapbox-gl.css';
 import ExistingReportItem from './components/ExistingReportItem.vue';
 import ReportsList from './components/ReportsList.vue';
+import { authClient } from './lib/auth-client';
 
 loadFonts('./fonts');
+authClient.useSession()
 
 </script>
 

@@ -1,23 +1,36 @@
 <script setup lang="ts">
 import { Report } from '../models/report.model';
 import { onMounted, ref } from 'vue';
-import { useMapStore, useReportStore } from '@/stores/map';
+import { useCurrentUserStore, useMapStore, useReportStore } from '@/stores/map';
 import { ReportStatus } from '@/models/report-status.enum';
 import router from '@/router';
+import { RuoliEnum } from '@/models/ruoli.enum';
+import axios from 'axios';
 
 const mapActions = useMapStore();
 const reportStore = useReportStore();
+const currentUserStore = useCurrentUserStore();
 const reports = ref([] as Report[]);
-// const api = axios.create({
-//   baseURL: 'http://localhost:3000'
-// })
+const baseUrlApi = 'http://localhost:3000/api/reports';
 
 onMounted(async () =>{
 try {
-  const response = await fetch('http://localhost:3000/api/reports/getAll');
-  reports.value = (await response.json()).data;  
-  for (const report of reports.value) {
-    mapActions.addMarker(report.coordinate);
+
+  if(currentUserStore.role === RuoliEnum.CITTADINO){
+    const response = await fetch(`${baseUrlApi}/getByUser/${currentUserStore.$id}`);
+    reports.value = (await response.json()).data;  
+    for (const report of reports.value) {
+      mapActions.addMarker(report.coordinate);
+    }
+    return;
+  }
+
+  if(currentUserStore.role === RuoliEnum.AMMINISTRATORE) {
+    const response = await fetch(`${baseUrlApi}/getAll`);
+    reports.value = (await response.json()).data;  
+    for (const report of reports.value) {
+      mapActions.addMarker(report.coordinate);
+    }
   }
 } catch (error) {
     console.error('Error fetching reports:', error);

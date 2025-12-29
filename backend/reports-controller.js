@@ -3,10 +3,10 @@ const connection = require('./db');
 module.exports.postReport = async function (req, res) {
     try {
         const uuid = crypto.randomUUID();    
-        const {id, categoria, indirizzo, descrizione, coordinate, data_inserimento, data_aggiornamento, assegnatario, status, email, telefono, annotazioni} = req.body;
+        const {id, utenteId, categoria, indirizzo, descrizione, coordinate, data_inserimento, data_aggiornamento, assegnatario, status, email, telefono, annotazioni} = req.body;
         const result = await (await connection).query(
-            'INSERT INTO reports (`id`, `categoria`, `indirizzo`, `descrizione`, `coordinate`, `data_inserimento`, `data_aggiornamento`, `assegnatario`, `status`, `email`, `telefono`, `annotazioni`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-            [uuid, categoria, indirizzo, descrizione, JSON.stringify(coordinate), data_inserimento, data_aggiornamento, assegnatario, status, email, telefono, annotazioni],
+            'INSERT INTO reports (`id`, `id_utente`, `categoria`, `indirizzo`, `descrizione`, `coordinate`, `data_inserimento`, `data_aggiornamento`, `assegnatario`, `status`, `email`, `telefono`, `annotazioni`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            [uuid, utenteId, categoria, indirizzo, descrizione, JSON.stringify(coordinate), data_inserimento, data_aggiornamento, assegnatario, status, email, telefono, annotazioni],
         );        
         return {success: true}       
     }
@@ -42,6 +42,11 @@ module.exports.reportsByGroup = async function (req, res) {
 
 module.exports.reportsByStatus = async function (req, res) {
    const [reports] = await (await connection).query('SELECT * FROM reports WHERE status = ?', [req.params.status]);   
+   return reports;
+}
+
+module.exports.reportsByUser = async function (req, res) {
+   const [reports] = await (await connection).query('SELECT * FROM reports WHERE id_utente = ?', [req.params.userId]);   
    return reports;
 }
 

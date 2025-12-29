@@ -1,18 +1,28 @@
 const express = require('express');
 const cors = require('cors');
+const auth = require('./lib/auth.js');
+const dotenv = require('dotenv');
+const { toNodeHandler } = require('better-auth/node');
 const reportController = require('./reports-controller');
 const groupsController = require('./gruppi-controller');
 const app = express();
 const port = 3000;
 
-//Middleware
-// app.use(cors({
-//   origin: ['http://localhost:8080', 'http://localhost:3000', 'http://localhost:5173/'], // porte comuni per Vue
-//   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-//   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin', 'Access-Control-Allow-Origin'],
-//   credentials: false
-// }));
-app.use(cors());
+dotenv.config();
+
+// Configurazione CORS
+app.use(cors({
+    origin: ['http://localhost:8080', 'http://localhost:3000', 'http://localhost:5173'], // porte comuni per Vue
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin', 'Access-Control-Allow-Origin'],
+    exposedHeaders: ['Access-Control-Allow-Origin'],
+    credentials: true,
+}));
+
+// Middleware per gestire le richieste preflight OPTIONS
+//app.options('*', cors());
+
+app.all('/api/auth/{*any}', toNodeHandler(auth.auth));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use('/api', (req, res, next) => {
@@ -55,6 +65,17 @@ app.get("/api/reports/getAll", async (req, res) => {
     console.log("Recupero di tutti i reports...");
     try {
         var reports = await reportController.allReports(req);        
+        res.json({success: true, data: reports});
+    } catch (error) {
+        res.json({success: false, message: error.message});
+    }
+});
+
+//GET reportsFilteredByUser
+app.get("/api/reports/getFilteredByUser", async (req, res) => {
+    console.log("Recupero di tutti i reports filtrati per utente ID " + req.query.userId);
+    try {
+        var reports = await reportController.reportsByUser(req);        
         res.json({success: true, data: reports});
     } catch (error) {
         res.json({success: false, message: error.message});

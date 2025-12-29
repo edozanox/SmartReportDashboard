@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { Notification } from 'bootstrap-italia';
-import { useMapStore } from '@/stores/map';
+import { useCurrentUserStore, useMapStore } from '@/stores/map';
 import { ref } from 'vue';
 import axios, { HttpStatusCode } from 'axios';
 import { ReportStatus } from '@/models/report-status.enum';
 
 const mapStore = useMapStore();
+const currentUserStore = useCurrentUserStore();
 const api = axios.create({
   baseURL: 'http://localhost:3000'
 })
@@ -17,7 +18,7 @@ const telefono = ref('');
 async function inviaReport(){
   try {  
     const request =
-    {id: null, categoria: tipo.value, indirizzo: mapStore.indirizzo, descrizione: descrizione.value, coordinate: mapStore.coordinate,
+    {id: null, utenteId: currentUserStore.$id, categoria: tipo.value, indirizzo: mapStore.indirizzo, descrizione: descrizione.value, coordinate: mapStore.coordinate,
       data_inserimento: new Date().toISOString().slice(0, 19).replace('T', ' '), data_aggiornamento: null, assegnatario: null, status: ReportStatus.OPEN,
       email: email.value, telefono: telefono.value, annotazioni: null};
     
