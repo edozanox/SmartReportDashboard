@@ -6,8 +6,10 @@ import SignIn from '@/components/auth/sign-in.vue'
 import { authClient } from '@/lib/auth-client'
 import Homepage from '@/components/Homepage.vue'
 import { RuoliEnum } from '@/models/ruoli.enum'
-import { useCurrentUserStore as useCurrentUserStore } from '@/stores/map'
+import { useCurrentUserStore as useCurrentUserStore } from '@/stores/store'
 import AdminContainer from '@/components/AdminContainer.vue'
+import CittadinoContainer from '@/components/CittadinoContainer.vue'
+import NotFound from '@/components/NotFound.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -30,45 +32,27 @@ const router = createRouter({
     {
       path: '/dashboard/cittadino',
       name: 'dashboard-cittadino',
-      component: AdminContainer, 
+      component: CittadinoContainer, 
       meta: {
         requiresAuth: true,
         requiredRoles: [RuoliEnum.CITTADINO]
       },
     },
-
-    // {
-    //   path: '/reports/nuova',
-    //   name: 'nuova-segnalazione',
-    //   component: ReportFormItem,
-    //   meta: {
-    //     requiresAuth: true,
-    //     requiredRoles: [RuoliEnum.CITTADINO]
-    //   },
-    // },
-    // {
-    //   path: '/reports/elenco',
-    //   name: 'elenco-segnalazioni',
-    //   component: ReportsList,
-    //   meta: { 
-    //     requiresAuth: true,
-    //     requiredRoles: [RuoliEnum.AMMINISTRATORE, RuoliEnum.OSSERVATORE] 
-    //   },
-    // },
-    // {
-    //   path: '/reports/dettaglio',
-    //   name: 'dettagli-segnalazione',
-    //   component: ExistingReportItem, 
-    //   meta: {
-    //     requiresAuth: true,
-    //     requiredRoles: [RuoliEnum.AMMINISTRATORE, RuoliEnum.OPERATORE, RuoliEnum.OSSERVATORE]
-    //   },
-    // },
+    {
+      path: '/reports/dettaglio',
+      name: 'dettagli-segnalazione',
+      component: ExistingReportItem, 
+      meta: {
+        requiresAuth: true,
+        requiredRoles: [RuoliEnum.AMMINISTRATORE, RuoliEnum.OPERATORE, RuoliEnum.OSSERVATORE]
+      },
+    },
     {
       path: '/login',
       name: 'login',
       component: SignIn,      
     },
+    { path: '/:pathMatch(.*)*', name: 'NotFound', component: NotFound },
   ],
 });
 

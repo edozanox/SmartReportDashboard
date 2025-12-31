@@ -1,22 +1,24 @@
 // stores/map.js
-import { defineStore } from 'pinia'
+import { defineStore, getActivePinia, type Pinia, type Store } from 'pinia'
 import { LngLat } from 'mapbox-gl';
 import { ref } from 'vue';
 import { Report } from '@/models/report.model';
 import { RuoliEnum } from '@/models/ruoli.enum';
 
-export const useMapStore = defineStore('map', () => {
- const indirizzo = ref('');
- const coordinate = ref (new LngLat(0,0));
- const markers = ref([] as LngLat[]);
- const markerObjects = ref([] as mapboxgl.Marker[]);
- const setMapData = (addr: string, coords: LngLat) => {
-    indirizzo.value = addr;
-    coordinate.value = coords;
- }
+const stores: Store[] = [];
 
- const addMarker = (marker: LngLat) => {
-    markers.value.push(marker);
+export const useMapStore = defineStore('map', () => {
+  const indirizzo = ref('');
+  const coordinate = ref (new LngLat(0,0));
+  const markers = ref([] as LngLat[]);
+  const markerObjects = ref<any[]>([]);
+  const setMapData = (addr: string, coords: LngLat) => {
+      indirizzo.value = addr;
+      coordinate.value = coords;
+  }
+
+  const addMarker = (coords: LngLat) => {
+    markers.value.push(coords);
   };
 
   const clearMarkers = () => {
@@ -25,7 +27,7 @@ export const useMapStore = defineStore('map', () => {
     markers.value = [];
   };
 
- return { indirizzo, coordinate, setMapData, markers, addMarker, clearMarkers };
+ return { indirizzo, coordinate, setMapData, markers, markerObjects, addMarker, clearMarkers };
 });
 
 export const useReportStore = defineStore('report', () => {
@@ -47,3 +49,21 @@ export const useCurrentUserStore = defineStore('currentUser', () => {
   }
   return { id, name, role, setUserInfo };  
 });
+
+
+export function piniaResetPlugin({ store }: { store: Store }) {
+  const initialState = JSON.parse(JSON.stringify(store.$state))
+  
+  store.$reset = () => {
+    store.$patch(initialState)
+  }
+  
+  // Aggiungi lo store all'array
+  stores.push(store)
+}
+
+export function resetAllStores() {
+  stores.forEach(store => {
+    store.$reset()
+  })
+}

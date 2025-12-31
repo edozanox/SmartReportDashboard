@@ -1,28 +1,52 @@
 <script setup lang="ts">
 import { Notification } from 'bootstrap-italia';
-import { useCurrentUserStore, useMapStore } from '@/stores/map';
-import { ref } from 'vue';
+import { useCurrentUserStore, useMapStore } from '@/stores/store';
+import { onMounted, ref } from 'vue';
 import axios, { HttpStatusCode } from 'axios';
 import { ReportStatus } from '@/models/report-status.enum';
+import { CategoriaEnum } from '@/models/categoria.enum';
 
 const mapStore = useMapStore();
 const currentUserStore = useCurrentUserStore();
 const api = axios.create({
-  baseURL: 'http://localhost:3000'
+  baseURL: 'http://localhost:3000/api/reports'
 })
-const tipo = ref('');
-const descrizione = ref('');
-const email = ref('');
-const telefono = ref('');
+
+const report = ref({  
+  tipo: '',
+  descrizione: '',
+  email: '',
+  telefono: '',  
+});
+
+onMounted(() =>{
+  initializeComponent();
+});
+
+function initializeComponent(){
+  mapStore.clearMarkers();
+}
 
 async function inviaReport(){
   try {  
     const request =
-    {id: null, utenteId: currentUserStore.$id, categoria: tipo.value, indirizzo: mapStore.indirizzo, descrizione: descrizione.value, coordinate: mapStore.coordinate,
-      data_inserimento: new Date().toISOString().slice(0, 19).replace('T', ' '), data_aggiornamento: null, assegnatario: null, status: ReportStatus.OPEN,
-      email: email.value, telefono: telefono.value, annotazioni: null};
-    
-    const response = await api.post('/api/reports/send', request);
+    {
+      id: null,
+      utenteId: currentUserStore.id,
+      categoria: report.value.tipo[0],
+      indirizzo: mapStore.indirizzo,
+      descrizione: report.value.descrizione,
+      coordinate: mapStore.coordinate,
+      data_inserimento: new Date().toISOString().slice(0, 19).replace('T', ' '),
+      data_aggiornamento: null,
+      assegnatario: null,
+      stato: ReportStatus.OPEN,
+      email: report.value.email,
+      telefono: report.value.telefono,
+      annotazioni: null
+    }
+    console.log(request);
+    const response = await api.post('/send', request);
     if(response.status == HttpStatusCode.Created)
     {
       let element = document.getElementById('report-ok');
@@ -43,6 +67,9 @@ async function inviaReport(){
   }
 
 }
+defineExpose({
+  initializeComponent
+});
 </script>
 
 <template>
@@ -54,48 +81,33 @@ async function inviaReport(){
   </div>
   
  
-  <div class="container mb-5 mt-2 pt-2">
-    <div class="row">      
-      <div class="col-12">
-        <h3>Nuova segnalazione</h3>
-        <hr>
-      </div>
-    </div>
+  <div class="container mb-5 mt-2 pt-2">    
     <div class="spacer"></div>
     <div class="row">
-      <div class="col-12 col-md-4">
-          <div class="form-group">
-          <div class="select-wrapper">
-            <label for="defaultSelect">Tipo segnalazione</label>
-            <select id="defaultSelect" class="form-control" v-model="tipo">
-              <option value="">Seleziona una voce</option>
-              <option value="OP_VIA">Manutenzione - sicurezza</option>
-              <option value="OP_STR">Strade - segnaletica - viabilità</option>
-              <option value="OP_VRD">Verde urbano</option>
-              <option value="OP_URB">Rifiuti</option>
-              <option value="OP_SOS">Ordine pubblico</option>
-            </select>
-          </div>
-        </div>
+      <div class="col-12 col-md-4">          
+        <div class="select-wrapper">
+          <label for="defaultSelect">Categoria</label>
+          <select id="defaultSelect" class="form-control" v-model="report.tipo">
+            <option v-for="(value, key) in Object.entries(CategoriaEnum)" :key="key" :value="value">{{ value[0] }} - {{ value[1] }}</option>
+          </select>
+        </div>        
       </div>
-      <div class="col-12 col-md-8">
-        <div class="form-group">
-          <label for="nome" class="">Indirizzo</label>
-          <input type="text" class="form-control" id="indirizzo" v-model="mapStore.indirizzo">
-        </div>
+      <div class="col-12 col-md-8">        
+        <label for="nome" class="">Indirizzo</label>
+        <input type="text" class="form-control" id="indirizzo" v-model="mapStore.indirizzo">      
       </div>
       <div class="col-12 col-md-12">
         <label for="nome" class="">Descrizione</label>
-        <textarea class="form-control" id="descrizione" rows="4" maxlength="5000" v-model="descrizione"></textarea>
+        <textarea class="form-control" id="descrizione" rows="4" maxlength="5000" v-model="report.descrizione"></textarea>
       </div>
       <div class="spacer"></div>
       <div class="col-12 col-md-6">
         <label for="email" class="">Email</label>
-        <input type="email" class="form-control" v-model="email">  
+        <input type="email" class="form-control" v-model="report.email">  
       </div>    
       <div class="col-12 col-md-6">
         <label for="telefono" class="">Telefono</label>
-        <input type="tel" class="form-control" v-model="telefono">
+        <input type="tel" class="form-control" v-model="report.telefono">
       </div>
     </div>    
  

@@ -1,30 +1,31 @@
 import { ReportStatus } from '@/models/report-status.enum'
 import type { LngLat } from 'mapbox-gl';
+import type { CategoriaEnum } from './categoria.enum';
 
 export class Report {
-  public id: number;
-  public categoria: string;
+  public id: string;
+  public categoria: CategoriaEnum;
   public indirizzo: string;
   public descrizione: string;
   public coordinate: LngLat;
   public data_inserimento: Date;
   public data_aggiornamento: Date | null;
   public id_gruppo: number | null;
-  public status: ReportStatus | null;
+  public stato: ReportStatus | null;
   public email: string;
   public telefono: string;
   public annotazioni: string | null;
 
   constructor(
-    id: number,
-    categoria: string,
+    id: string,
+    categoria: CategoriaEnum,
     indirizzo: string,
     descrizione: string,
     coordinate: LngLat,
     data_inserimento: Date,
     data_aggiornamento: Date | null,
     id_gruppo: number | null,
-    status: ReportStatus | null,
+    stato: ReportStatus | null,
     email: string,
     telefono: string,
     annotazioni: string | null
@@ -37,7 +38,7 @@ export class Report {
     this.data_inserimento = data_inserimento;
     this.data_aggiornamento = data_aggiornamento;
     this.id_gruppo = id_gruppo;
-    this.status = status;
+    this.stato = stato;
     this.email = email;
     this.telefono = telefono;
     this.annotazioni = annotazioni;

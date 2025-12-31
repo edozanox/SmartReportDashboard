@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
-import { useMapStore, useReportStore } from '@/stores/map';
-import type { Group } from '@/models/group.model';
+import { useMapStore, useReportStore } from '@/stores/store';
+import type { Gruppo } from '@/models/gruppo.model';
 
-var groups = ref([] as Group[]);
+var groups = ref([] as Gruppo[]);
 
 onMounted(async () =>{
 try {

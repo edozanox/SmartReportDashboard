@@ -1,7 +1,4 @@
-import { ReportStatus } from '@/models/report-status.enum'
-import type { LngLat } from 'mapbox-gl';
-
-export class Group {
+export class Gruppo {
   public id: number;
   public codice: string;
   public nome: string;

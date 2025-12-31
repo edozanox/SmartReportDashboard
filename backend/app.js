@@ -62,7 +62,6 @@ app.put("/api/reports/change", async (req, res) => {
 
 //GET allReports
 app.get("/api/reports/getAll", async (req, res) => {
-    console.log("Recupero di tutti i reports...");
     try {
         var reports = await reportController.allReports(req);        
         res.json({success: true, data: reports});
@@ -72,8 +71,7 @@ app.get("/api/reports/getAll", async (req, res) => {
 });
 
 //GET reportsFilteredByUser
-app.get("/api/reports/getFilteredByUser", async (req, res) => {
-    console.log("Recupero di tutti i reports filtrati per utente ID " + req.query.userId);
+app.get("/api/reports/getByUser/:userId", async (req, res) => {
     try {
         var reports = await reportController.reportsByUser(req);        
         res.json({success: true, data: reports});
@@ -82,9 +80,18 @@ app.get("/api/reports/getFilteredByUser", async (req, res) => {
     }
 });
 
+//GET reportsFiltered
+app.post("/api/reports/getByFilters/", async (req, res) => {    
+    try {
+        var reports = await reportController.getReportsByFilters(req);        
+        res.json({success: true, data: reports});
+    } catch (error) {
+        res.json({success: false, message: error.message});
+    }
+});
+
 //GET allGruppi
-app.get("/api/gruppi/getAll", async (req, res) => {
-    console.log("Recupero di tutti i gruppi...");
+app.get("/api/gruppi/getAll", async (req, res) => {    
     try {
         //Recupero gruppi
         var groups = await groupsController.allGruppi(req);      
@@ -102,16 +109,17 @@ app.get("/api/gruppi/getAll", async (req, res) => {
 });
 
 app.get('/', (req, res) => {
-  res.send('Server is running, yuppie!!!');
+  res.send('SmartReportDashboard API is running');
 });
 
 app.use(function(req, res, next) {
     res.setHeader('Content-Type', 'text/plain');
     res.status(404);
-    res.send('Pagina non trovata, specificare endpoint');
+    res.send('Endpoint inesistente, ricontrolla l\'URL');
 });
 
 app.listen(port, function() {
     console.log("Server is running on port " + port);
 });
+
 

@@ -1,16 +1,21 @@
 <script setup lang="ts">
 import { authClient } from '@/lib/auth-client';
 import { RuoliEnum } from '@/models/ruoli.enum';
-import { useCurrentUserStore } from '@/stores/map';
-import { getActivePinia } from 'pinia';
-import router from '@/router';
+import { resetAllStores, useCurrentUserStore } from '@/stores/store';
 
 const currentUserStore = useCurrentUserStore();
 
-function logout() {
-  authClient.signOut();  
-  // currentUserStore.$reset();
-  router.push({ name: 'home' });
+function logout() {  
+  authClient.signOut({
+    fetchOptions: {
+      onSuccess: () => {
+        resetAllStores();
+        localStorage.clear();
+        sessionStorage.clear();
+        window.location.href = '/';
+      },
+    },
+  });
 }
 </script>
 

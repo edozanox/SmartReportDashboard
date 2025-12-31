@@ -2,7 +2,7 @@
 import { ref } from 'vue';
 import { authClient } from '@/lib/auth-client'; 
 import type { UserDataPayload } from '@/lib/better-auth';
-import { useCurrentUserStore as useCurrentUserStore } from '@/stores/map';
+import { useCurrentUserStore as useCurrentUserStore } from '@/stores/store';
 import router from '@/router';
 import { RuoliEnum } from '@/models/ruoli.enum';
 
@@ -175,8 +175,8 @@ function toggleMode() {
         <br/>
         
         <div class="select-wrapper" v-if="isSignUpMode">
-          <label for="defaultSelect">Ruolo</label>
-          <select id="defaultSelect" class="form-control" v-model="ruolo">
+          <label for="selettoreRuolo">Ruolo</label>
+          <select id="selettoreRuolo" class="form-control" v-model="ruolo">
             <option value="">--</option>
             <option value="0">Cittadino</option>
             <option value="1">Osservatore</option>
@@ -186,9 +186,6 @@ function toggleMode() {
         </div>
                           
       </div>  
-
-      <br/>
-      <br/>
 
       <button type="button" class="btn btn-primary" v-on:click="isSignUpMode ? handleSignUp() : handleSignIn()">
         {{ (isSignUpMode ? 'Registrati' : 'Accedi') }}

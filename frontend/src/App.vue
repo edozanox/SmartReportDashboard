@@ -1,13 +1,9 @@
 <script setup lang="ts">
 import HeaderBI from './components/HeaderBI.vue';
 import MapItem from './components/MapItem.vue';
-import { loadFonts } from 'bootstrap-italia'
 import 'mapbox-gl/dist/mapbox-gl.css';
-import ExistingReportItem from './components/ExistingReportItem.vue';
-import ReportsList from './components/ReportsList.vue';
 import { authClient } from './lib/auth-client';
 
-loadFonts('./fonts');
 authClient.useSession()
 
 </script>
@@ -34,9 +30,10 @@ authClient.useSession()
       </div>
 
       <!-- Riga inferiore (1/3 dell'altezza) -->
-      <!-- <div class="flex-grow-1 bg-success"> -->
+      <div class="flex-grow-1 bg-light">
+        
         <!-- Riga inferiore (1/3) -->
-      <!-- </div> -->
+      </div>
     </div>
 
     </div>
@@ -44,8 +41,14 @@ authClient.useSession()
 </template>
 
 <style scoped>
+  @font-face {
+    font-family: 'Titillium Web';
+    font-style: normal;
+    font-weight: 700;
+    src: url('@/assets/fonts/Titillium_Web/titillium-web-v10-latin-ext_latin-700.woff2') format('woff2');
+  }
 
- html, body {
+  html, body {
       height: 100%;
       margin: 0;
     }

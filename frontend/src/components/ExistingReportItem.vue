@@ -1,36 +1,43 @@
 <script setup lang="ts">
 import { Notification } from 'bootstrap-italia';
-import { useMapStore, useReportStore } from '@/stores/map';
+import { useMapStore, useReportStore } from '@/stores/store';
 import { onMounted, ref } from 'vue';
 import axios, { HttpStatusCode } from 'axios';
 import { ReportStatus } from '@/models/report-status.enum';
-import type { Group } from '@/models/group.model';
+import { CategoriaEnum } from '@/models/categoria.enum';
+import type { Gruppo } from '@/models/gruppo.model';
 
 const reportStore = useReportStore();
 const mapActions = useMapStore();
 const report = reportStore.segnalazione;
-var groups = [] as Group[];
+const gruppi = ref([] as Gruppo[]);
 const api = axios.create({
   baseURL: 'http://localhost:3000'
 })
 
 onMounted(async () =>{
-  mapActions.clearMarkers();    
-
+  
+  initializeComponent();
+  
   // Recupero i gruppi per l'assegnazione del report
   try {
   const response = await fetch('http://localhost:3000/api/gruppi/getAll');
-  groups = (await response.json()).data;  
+  gruppi.value = (await response.json()).data;  
 
   } catch (error) {
       console.error('Errore nel recupero della lista gruppi:', error);
   }
 });
 
+function initializeComponent(){
+  mapActions.clearMarkers();
+  setTimeout(() => mapActions.addMarker(report.coordinate));
+}
+
 async function salvaModifiche(){
   try {  
     const request =
-    {id: null, assegnatario: null, status: ReportStatus.OPEN, annotazioni: null};
+    {id: null, assegnatario: null, stato: ReportStatus.OPEN, annotazioni: null};
     
     const response = await api.post('/api/reports/change', request);
     if(response.status == HttpStatusCode.Created)
@@ -68,50 +75,42 @@ async function salvaModifiche(){
     <div class="row">      
       <div class="col-12" style="display: flex; justify-content: space-between; align-items: center;">
         <h3>Dettaglio segnalazione</h3>
-        <span v-if="report.status === ReportStatus.OPEN">
+        <span v-if="report.stato === ReportStatus.OPEN">
           <svg class="icon icon-secondary"><use href="/bi-icons.svg#it-plus-circle"></use></svg>
           <strong>Aperta</strong>
           </span>
 
-          <span v-if="report.status === ReportStatus.IN_PROGRESS">
+          <span v-if="report.stato === ReportStatus.IN_PROGRESS">
           <svg class="icon icon-primary"><use href="/bi-icons.svg#it-clock"></use></svg>
           <strong>In lavorazione</strong> 
           </span>
 
-          <span v-if="report.status === ReportStatus.RESOLVED">
+          <span v-if="report.stato === ReportStatus.RESOLVED">
           <svg class="icon icon-success"><use href="/bi-icons.svg#it-check-circle"></use></svg>
           <strong>Risolta</strong>
           </span>            
           
-          <span v-if="report.status === ReportStatus.REFUSED">
+          <span v-if="report.stato === ReportStatus.REFUSED">
           <svg class="icon icon-danger"><use href="/bi-icons.svg#it-close-circle"></use></svg>
           <strong>Chiusa</strong>
           </span>        
-      </div>
-      <hr>
+      </div>      
     </div>
+    <p style="color:gray">Report {{ report.id.slice(0, 8) }} creato il {{ new Date(report.data_inserimento).toLocaleDateString('it-IT') }}</p>
+    <hr>
     <div class="spacer"></div>
     <div class="row">
-      <div class="col-12 col-md-4">
-          <div class="form-group">
-          <div class="select-wrapper">
-            <label for="tipoSelector">Tipo segnalazione</label>
-            <select id="tipoSelector" class="form-control" v-model="report.categoria" disabled>
-              <option value="">Seleziona una voce</option>
-              <option value="OP_VIA">Manutenzione - sicurezza</option>
-              <option value="OP_STR">Strade - segnaletica - viabilità</option>
-              <option value="OP_VRD">Verde urbano</option>
-              <option value="OP_URB">Rifiuti</option>
-              <option value="OP_SOS">Ordine pubblico</option>
-            </select>
-          </div>
+    <div class="col-12 col-md-4">
+        <div class="select-wrapper">
+          <label for="tipoSelector">Categoria</label>
+          <select id="tipoSelector" class="form-control" v-model="report.categoria">
+            <option v-for="(value, key) in Object.entries(CategoriaEnum)" :key="key" :value="value">{{ value[0] }} - {{ value[1] }}</option>
+          </select>
         </div>
       </div>
-      <div class="col-12 col-md-8">
-        <div class="form-group">
-          <label for="nome" class="">Indirizzo</label>
-          <input type="text" class="form-control" id="indirizzo" v-model="report.indirizzo" disabled>
-        </div>
+      <div class="col-12 col-md-8">        
+        <label for="nome" class="">Indirizzo</label>
+        <input type="text" class="form-control" id="indirizzo" v-model="report.indirizzo" disabled>      
       </div>
       <div class="col-12 col-md-12">
         <label for="nome" class="">Descrizione</label>
@@ -128,20 +127,16 @@ async function salvaModifiche(){
       </div>
       <div class="spacer"></div>
       <div class="col-12 col-md-6">
-          <div class="form-group">
-          <div class="select-wrapper">
-            <label for="gruppoSelector">Gruppo incaricato</label>
-            <select id="gruppoSelector" class="form-control" v-model="report.id_gruppo">              
-              <option v-for="group in groups" value="{{ group.id }}">{{ group.codice }} - {{ group.nome }}</option>     
-            </select>
-          </div>
+        <div class="select-wrapper">
+          <label for="gruppoSelector">Gruppo incaricato</label>
+          <select id="gruppoSelector" class="form-control" v-model="report.id_gruppo">              
+            <option v-for="group in gruppi" value="{{ group.id }}">{{ group.codice }} - {{ group.nome }}</option>     
+          </select>
         </div>
       </div>
-      <div class="col-12 col-md-6">
-        <div class="form-group">
-          <label for="nome" class="">Note</label>
-          <input type="text" class="form-control" id="indirizzo" v-model="report.annotazioni">
-        </div>
+      <div class="col-12 col-md-6">        
+        <label for="nome" class="">Note</label>
+        <input type="text" class="form-control" id="indirizzo" v-model="report.annotazioni">        
       </div>
       <!-- <div class="col-12 col-md-6">
         <label for="annotazioni" class="">Note</label>
