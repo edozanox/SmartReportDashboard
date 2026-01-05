@@ -3,6 +3,7 @@ import HeaderBI from './components/HeaderBI.vue';
 import MapItem from './components/MapItem.vue';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { authClient } from './lib/auth-client';
+import FeedRssItem from './components/FeedRssItem.vue';
 
 authClient.useSession()
 
@@ -12,9 +13,9 @@ authClient.useSession()
 
   <HeaderBI/>
 
-  <div class="container-fluid full-height">
+  <div class="container-fluid full-height app-container">
     <div class="row h-100">
-      
+
       <!-- COLONNA SINISTRA -->
       <div class="col-4 d-flex">
         <MapItem/>
@@ -22,22 +23,21 @@ authClient.useSession()
 
       <!-- COLONNA DESTRA -->
      <div class="col-md-8 d-flex flex-column">
-      <!-- Riga superiore (2/3 dell'altezza) -->      
+      <!-- Riga superiore (2/3 dell'altezza) -->
        <RouterView></RouterView>
       <!-- <ReportFormItem/> -->
       <div class="flex-grow-2 ">
-        
+
       </div>
 
       <!-- Riga inferiore (1/3 dell'altezza) -->
-      <!-- <div class="flex-grow-1 bg-light"> -->
-        
+      <div class="col-md-12 d-flex bg-light" >
+        <FeedRssItem></FeedRssItem>
         <!-- Riga inferiore (1/3) -->
       </div>
+     </div>
     </div>
-
-    </div>
-  <!-- </div> -->
+  </div>
 </template>
 
 <style scoped>
@@ -49,14 +49,16 @@ authClient.useSession()
   }
 
   html, body {
-      height: 100%;
-      margin: 0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
     }
-    .full-height {
+    /* .full-height {
       height: 100vh;
     }
     .half-height {
       height: 50%;
-    }
+    } */
 
 </style>

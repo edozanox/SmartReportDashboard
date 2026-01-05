@@ -10,6 +10,7 @@ import { useCurrentUserStore as useCurrentUserStore } from '@/stores/store'
 import AdminContainer from '@/components/AdminContainer.vue'
 import CittadinoContainer from '@/components/CittadinoContainer.vue'
 import NotFound from '@/components/NotFound.vue'
+import type { UserDataPayload } from '@/lib/better-auth'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -72,11 +73,21 @@ router.beforeEach(async (to, from, next) => {
 
   try {
     
-    const response = await authClient.getSession();    
+    const response = await authClient.getSession() as UserDataPayload;    
     const { data: session } = response;
     const isAuthenticated = !!session; // La sessione è autenticata se `session` non è null/undefined
 
-    const userRole = useCurrentUserStore().role;
+    // 🔑 Ripristina i dati dell'utente nello store se la sessione è valida
+    const userStore = useCurrentUserStore();
+    if (isAuthenticated && session.user) {
+      userStore.setUserInfo(
+        session.user.id,
+        session.user.name,
+        session.user.role
+      );
+    }
+
+    const userRole = userStore.role;
 
     // ❌ Rotta protetta ma utente non autenticato
     if (requiresAuth && !isAuthenticated) {
