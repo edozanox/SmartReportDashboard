@@ -63,8 +63,8 @@ app.put("/api/reports/change", async (req, res) => {
 //GET allReports
 app.get("/api/reports/getAll", async (req, res) => {
     try {
-        var reports = await reportController.allReports(req);        
-        res.json({success: true, data: reports});
+        var result = await reportController.allReports(req);        
+        res.json({success: true, data: result.data, pagination: result.pagination});
     } catch (error) {
         res.json({success: false, message: error.message});
     }
@@ -83,8 +83,8 @@ app.get("/api/reports/getByUser/:userId", async (req, res) => {
 //GET reportsFiltered
 app.post("/api/reports/getByFilters/", async (req, res) => {    
     try {
-        var reports = await reportController.getReportsByFilters(req);        
-        res.json({success: true, data: reports});
+        var result = await reportController.getReportsByFilters(req);        
+        res.json({success: true, data: result.data, pagination: result.pagination});
     } catch (error) {
         res.json({success: false, message: error.message});
     }

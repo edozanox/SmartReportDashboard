@@ -39,7 +39,9 @@ module.exports.reportsByUser = async function (req, res) {
 
 module.exports.getReportsByFilters = async function (req, res) {
     try {
-        const { id_utente, stato, id_gruppo, categoria } = req.body;
+        const { id_utente, stato, id_gruppo, categoria, page = 1 } = req.body;
+        const pageSize = 3;
+        const offset = (page - 1) * pageSize;
         
         const whereClauses = [];
         const values = [];
@@ -62,19 +64,35 @@ module.exports.getReportsByFilters = async function (req, res) {
             values.push(categoria);
         }
 
-        // Costruisci la query
+        // Costruisci la query per contare il totale
+        let countQuery = 'SELECT COUNT(*) as total FROM reports';
+        if (whereClauses.length > 0) {
+            countQuery += ' WHERE ' + whereClauses.join(' AND ');
+        }
+        
+        const [countResult] = await (await connection).query(countQuery, values);
+        const totalItem = countResult[0].total;
+        const totalPages = Math.ceil(totalItem / pageSize);
+
+        // Costruisci la query per i dati
         let query = 'SELECT * FROM reports';
         if (whereClauses.length > 0) {
             query += ' WHERE ' + whereClauses.join(' AND ');
         }
-        query += ' ORDER BY data_inserimento DESC';
+        query += ' ORDER BY data_inserimento DESC LIMIT ? OFFSET ?';
+        values.push(pageSize, offset);
 
         const [reports] = await (await connection).query(query, values);
         
         return {
             success: true,
             data: reports,
-            count: reports.length
+            pagination: {
+                currentPage: page,
+                pageSize: pageSize,
+                totalItem: totalItem,
+                totalPages: totalPages
+            }
         };
     } catch (error) {
         console.error('Errore nel filtraggio dei report:', error);
@@ -86,8 +104,27 @@ module.exports.getReportsByFilters = async function (req, res) {
 };
 
 module.exports.allReports = async function (req, res) {
-   const [reports] = await (await connection).query('SELECT * FROM reports ORDER BY data_inserimento DESC');   
-   return reports;
+   const page = req.query.page ? parseInt(req.query.page) : 1;
+   const pageSize = 3;
+   const offset = (page - 1) * pageSize;
+   
+   // Conta il totale
+   const [countResult] = await (await connection).query('SELECT COUNT(*) as total FROM reports');
+   const totalItem = countResult[0].total;
+   const totalPages = Math.ceil(totalItem / pageSize);
+   
+   // Recupera i dati paginati
+   const [reports] = await (await connection).query('SELECT * FROM reports ORDER BY data_inserimento DESC LIMIT ? OFFSET ?', [pageSize, offset]);   
+   
+   return {
+       data: reports,
+       pagination: {
+           currentPage: page,
+           pageSize: pageSize,
+           totalItem: totalItem,
+           totalPages: totalPages
+       }
+   };
 }
 
 

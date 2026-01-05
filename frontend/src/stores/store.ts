@@ -58,7 +58,6 @@ export function piniaResetPlugin({ store }: { store: Store }) {
     store.$patch(initialState)
   }
   
-  // Aggiungi lo store all'array
   stores.push(store)
 }
 

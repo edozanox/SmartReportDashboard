@@ -30,14 +30,14 @@ authClient.useSession()
       </div>
 
       <!-- Riga inferiore (1/3 dell'altezza) -->
-      <div class="flex-grow-1 bg-light">
+      <!-- <div class="flex-grow-1 bg-light"> -->
         
         <!-- Riga inferiore (1/3) -->
       </div>
     </div>
 
     </div>
-  </div>
+  <!-- </div> -->
 </template>
 
 <style scoped>

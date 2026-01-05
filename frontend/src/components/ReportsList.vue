@@ -1,18 +1,42 @@
 <script setup lang="ts">
 import { Report } from '../models/report.model';
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useCurrentUserStore, useMapStore, useReportStore } from '@/stores/store';
 import { ReportStatus } from '@/models/report-status.enum';
 import router from '@/router';
 import { RuoliEnum } from '@/models/ruoli.enum';
 import type { Gruppo } from '@/models/gruppo.model';
 import { CategoriaEnum } from '@/models/categoria.enum';
+import type { number } from 'better-auth';
 
 const mapActions = useMapStore();
 const reportStore = useReportStore();
 const currentUserStore = useCurrentUserStore();
 const reports = ref([] as Report[]);
 const gruppi = ref([] as Gruppo[]);
+
+const currentPage = ref(1);
+const totalPages = ref(0);
+const perPage = ref(3);
+const totalItem = ref(0);
+
+const visiblePages = computed(() => {
+  const delta = 2
+  const range = []
+  const rangeWithDots = []
+  let l
+
+  for (let i = 1; i <= totalPages.value; i++) {
+    if (
+      i === 1 ||
+      i === totalPages.value ||
+      (i >= currentPage.value - delta && i <= currentPage.value + delta)
+    ) {
+      range.push(i)
+    }
+  }
+  return range;
+});
 
 const filters = ref({
   stato: null,
@@ -32,7 +56,7 @@ async function initializeComponent(){
 
   if(currentUserStore.role === RuoliEnum.CITTADINO){
     const response = await fetch(`${baseUrlApiReports}/getByUser/${currentUserStore.id}`);
-    reports.value = (await response.json()).data;  
+    reports.value = (await response.json()).data;
     for (const report of reports.value) {
       mapActions.addMarker(report.coordinate);
     }
@@ -41,9 +65,14 @@ async function initializeComponent(){
 
   if(currentUserStore.role === RuoliEnum.AMMINISTRATORE) {
 
-    //Recupero tutte le segnalazioni
-    const response = await fetch(`${baseUrlApiReports}/getAll`);
-    reports.value = (await response.json()).data;  
+    //Recupero tutte le segnalazioni con info paginazione
+    const response = await fetch(`${baseUrlApiReports}/getAll?page=${currentPage.value}}`);    
+    const json = await response.json();
+    reports.value = await json.data;
+    currentPage.value = json.pagination.currentPage;
+    totalPages.value = json.pagination.totalPages;
+    totalItem.value = json.pagination.totalItem;
+
     for (const report of reports.value) {
       mapActions.addMarker(report.coordinate);
     }
@@ -82,6 +111,17 @@ const formatDate = (iso_date: any) => {
     for (const report of reports.value) {    
       setTimeout(() => mapActions.addMarker(report.coordinate), 500);
     }
+  }
+
+  async function changePage(page: any) {
+    if (page < 1 || page > totalPages.value || page === '...') {
+      return;
+    }
+    currentPage.value = page;
+    await initializeComponent();
+
+    // Scroll all'inizio della tabella (opzionale)
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
 defineExpose({
@@ -191,6 +231,57 @@ defineExpose({
       </tr>
     </tbody>
   </table>
+   <!-- Paginazione Bootstrap Italia -->
+    <nav aria-label="Navigazione pagine" v-if="totalPages > 1">
+      <ul class="pagination justify-content-center">
+        <!-- Pulsante Precedente -->
+        <li class="page-item" :class="{ disabled: currentPage === 1 }">
+          <a 
+            class="page-link" 
+            href="#" 
+            @click.prevent="changePage(currentPage - 1)"
+            :tabindex="currentPage === 1 ? -1 : 0"
+          >
+            <svg class="icon icon-primary">
+              <use href="/bi-icons.svg#it-chevron-left"></use>
+            </svg>
+            <span class="visually-hidden">Pagina precedente</span>
+          </a>
+        </li>
+
+        <!-- Numeri di pagina -->
+        <li 
+          v-for="page in visiblePages" 
+          :key="page"
+          class="page-item" 
+          :class="{ active: page === currentPage }"
+        >
+          <a 
+            class="page-link" 
+            href="#" 
+            @click.prevent="changePage(page)"
+          >
+            {{ page }}
+            <span v-if="page === currentPage" class="visually-hidden">pagina corrente</span>
+          </a>
+        </li>
+
+        <!-- Pulsante Successivo -->
+        <li class="page-item" :class="{ disabled: currentPage === totalPages }">
+          <a 
+            class="page-link" 
+            href="#" 
+            @click.prevent="changePage(currentPage + 1)"
+            :tabindex="currentPage === totalPages ? -1 : 0"
+          >
+            <span class="visually-hidden">Pagina successiva</span>
+            <svg class="icon icon-primary">
+              <use href="/bi-icons.svg#it-chevron-right"></use>
+            </svg>
+          </a>
+        </li>
+      </ul>
+    </nav>
 </template>
 
 <style scoped>
