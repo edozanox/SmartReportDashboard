@@ -7,7 +7,17 @@ import router from '@/router';
 import { RuoliEnum } from '@/models/ruoli.enum';
 import type { Gruppo } from '@/models/gruppo.model';
 import { CategoriaEnum } from '@/models/categoria.enum';
-import type { number } from 'better-auth';
+import axios from 'axios';
+
+const apiReports = axios.create({
+  baseURL: 'http://localhost:3000/api/reports',
+  withCredentials: true,
+});
+
+const apiGroups = axios.create({
+  baseURL: 'http://localhost:3000/api/gruppi',
+  withCredentials: true,
+});
 
 const mapActions = useMapStore();
 const reportStore = useReportStore();
@@ -41,11 +51,8 @@ const visiblePages = computed(() => {
 const filters = ref({
   stato: null,
   categoria: null,
-  gruppoId: null,
+  id_gruppo: null,
 });
-
-const baseUrlApiReports = 'http://localhost:3000/api/reports';
-const baseUrlApiGruppi = 'http://localhost:3000/api/gruppi';
 
 onMounted(async () =>{
   await initializeComponent();
@@ -55,8 +62,9 @@ async function initializeComponent(){
   try {
 
   if(currentUserStore.role === RuoliEnum.CITTADINO){
-    const response = await fetch(`${baseUrlApiReports}/getByUser/${currentUserStore.id}`);
-    reports.value = (await response.json()).data;
+    const response = (await apiReports.get(`/getByUser`));
+    const json = response.data;
+    reports.value = await json.data;
     for (const report of reports.value) {
       mapActions.addMarker(report.coordinate);
     }
@@ -66,8 +74,8 @@ async function initializeComponent(){
   if(currentUserStore.role === RuoliEnum.AMMINISTRATORE) {
 
     //Recupero tutte le segnalazioni con info paginazione
-    const response = await fetch(`${baseUrlApiReports}/getAll?page=${currentPage.value}}`);    
-    const json = await response.json();
+    const response = (await apiReports.get(`/getAll?page=${currentPage.value}}`));
+    const json = response.data;
     reports.value = await json.data;
     currentPage.value = json.pagination.currentPage;
     totalPages.value = json.pagination.totalPages;
@@ -78,8 +86,8 @@ async function initializeComponent(){
     }
 
     //Recupero gruppi per filtri
-    const responseGruppi = await fetch(`${baseUrlApiGruppi}/getAll`);
-    gruppi.value = (await responseGruppi.json()).data;  
+    const responseGruppi = (await apiGroups.get(`/getAll`));
+    gruppi.value = responseGruppi.data.data;
     return;
   }
   } catch (error) {
@@ -94,22 +102,32 @@ const formatDate = (iso_date: any) => {
 
   function apriDettaglioSegnalazione(report: Report) {
     reportStore.setReport(report);
-    router.push({name: 'dettagli-segnalazione' });
+    router.push({name: 'dettagli-segnalazione', params: { id: report.id } });
   }
 
-  async function applicaFiltri() {
-    const filterdReports = await fetch(`${baseUrlApiReports}/getByFilters`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(filters.value)
-    });
-    const responseData = await filterdReports.json();
-    reports.value = responseData.data.data;
+  function hasActiveFilters() {
+    return filters.value.stato || filters.value.categoria || filters.value.id_gruppo;
+  }
+
+  async function applicaFiltri(page = 1) {
+    currentPage.value = page;
+    const filterdReports = await apiReports.post('/getByFilters', 
+      JSON.stringify({ ...filters.value, page }),
+      {headers: { 'Content-Type': 'application/json' }}
+    );
+    
+    const responseData = filterdReports.data;
+    reports.value = responseData.data?.data || responseData.data || [];
+    
+    // Aggiorna paginazione se disponibile
+    if (responseData.pagination) {
+      totalPages.value = responseData.pagination.totalPages || 1;
+      totalItem.value = responseData.pagination.totalItem || 0;
+    }
+    
     mapActions.clearMarkers();
     for (const report of reports.value) {    
-      setTimeout(() => mapActions.addMarker(report.coordinate), 500);
+      mapActions.addMarker(report.coordinate);
     }
   }
 
@@ -117,8 +135,14 @@ const formatDate = (iso_date: any) => {
     if (page < 1 || page > totalPages.value || page === '...') {
       return;
     }
-    currentPage.value = page;
-    await initializeComponent();
+    
+    // Se ci sono filtri attivi, applica i filtri con la nuova pagina
+    if (hasActiveFilters()) {
+      await applicaFiltri(page);
+    } else {
+      currentPage.value = page;
+      await initializeComponent();
+    }
 
     // Scroll all'inizio della tabella (opzionale)
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -133,7 +157,7 @@ defineExpose({
 
 <br/>
 
-<div class="d-flex justify-content-between mb-3">
+<div class="d-flex justify-content-between mb-3" v-if="currentUserStore.role === RuoliEnum.AMMINISTRATORE">
 
   <!-- Filtro per status -->
   <div class="select-wrapper">
@@ -159,9 +183,9 @@ defineExpose({
   <!-- Filtro per gruppo -->
   <div class="select-wrapper">
     <label for="selettoreGruppo">Gruppo</label>
-    <select id="selettoreGruppo" class="form-control" v-model="filters.gruppoId">
+    <select id="selettoreGruppo" class="form-control" v-model="filters.id_gruppo">
       <option value="" default>--</option>   
-      <option v-for="value in gruppi" :key="value.id">{{ value.nome }}</option>
+      <option v-for="value in gruppi" :key="value.id" :value="value.id">{{ value.nome }}</option>
     </select>
   </div>
 
@@ -187,7 +211,8 @@ defineExpose({
         <th scope="col">Indirizzo</th>
         <th scope="col">Data inserimento</th>
         <th scope="col">Status</th>
-        <th scope="col">Operazioni</th>
+        <th scope="col" v-if="currentUserStore.role == RuoliEnum.AMMINISTRATORE">Operazioni</th>
+        <th scope="col" v-if="currentUserStore.role == RuoliEnum.CITTADINO">Note</th>
       </tr>
     </thead>
     <tbody>
@@ -218,21 +243,23 @@ defineExpose({
           </span>
           
         </td>
-        <td>
+        <td v-if="currentUserStore.role == RuoliEnum.AMMINISTRATORE">
           <button class="btn btn btn-primary" 
           data-bs-toggle="tooltip" data-bs-placement="top" title="Apri segnalazione" 
           @click="apriDettaglioSegnalazione(x)">
           <svg class="icon icon-white">
             <use href="/bi-icons.svg#it-arrow-right-circle"></use>
           </svg>
-        </button>
-          
+        </button>          
+        </td>
+        <td v-if="currentUserStore.role == RuoliEnum.CITTADINO">
+         {{ x.annotazioni }}
         </td>
       </tr>
     </tbody>
   </table>
    <!-- Paginazione Bootstrap Italia -->
-    <nav aria-label="Navigazione pagine" v-if="totalPages > 1">
+    <nav aria-label="Navigazione pagine" v-if="currentUserStore.role === RuoliEnum.AMMINISTRATORE && totalPages > 1">
       <ul class="pagination justify-content-center">
         <!-- Pulsante Precedente -->
         <li class="page-item" :class="{ disabled: currentPage === 1 }">

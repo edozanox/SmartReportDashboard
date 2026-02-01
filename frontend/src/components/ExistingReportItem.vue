@@ -1,76 +1,164 @@
 <script setup lang="ts">
-import { Notification } from 'bootstrap-italia';
+import { onMounted, ref, watch } from 'vue';
+import { useRoute } from 'vue-router';
 import { useMapStore, useReportStore } from '@/stores/store';
-import { onMounted, ref } from 'vue';
-import axios, { HttpStatusCode } from 'axios';
 import { ReportStatus } from '@/models/report-status.enum';
 import { CategoriaEnum } from '@/models/categoria.enum';
+import { Notification } from 'bootstrap-italia';
 import type { Gruppo } from '@/models/gruppo.model';
+import type { Report } from '@/models/report.model';
+import axios from 'axios';
+import router from '@/router';
 
 const reportStore = useReportStore();
 const mapActions = useMapStore();
-const report = reportStore.segnalazione;
+const route = useRoute();
+const report = ref<Report>(reportStore.segnalazione);
 const gruppi = ref([] as Gruppo[]);
-const api = axios.create({
-  baseURL: 'http://localhost:3000'
-})
+const apiReports = axios.create({
+  baseURL: 'http://localhost:3000/api/reports',
+  withCredentials: true,
+});
+const apiGruppi = axios.create({
+  baseURL: 'http://localhost:3000/api/gruppi',
+  withCredentials: true,
+});
 
 onMounted(async () =>{
   
-  initializeComponent();
+  await initializeComponent();
   
-  // Recupero i gruppi per l'assegnazione del report
   try {
-  const response = await fetch('http://localhost:3000/api/gruppi/getAll');
-  gruppi.value = (await response.json()).data;  
-
+    const response = (await apiGruppi.get('/getAll'));
+    gruppi.value = response.data.data;
   } catch (error) {
       console.error('Errore nel recupero della lista gruppi:', error);
   }
 });
 
-function initializeComponent(){
+// Osserva i cambiamenti dell'ID della rotta per aggiornare il componente
+watch(() => route.params.id, async () => {
+  await initializeComponent();
+});
+
+async function initializeComponent(){
+  // Se il report non è nello store, recuperalo dal server tramite l'ID della rotta
+  if (!report.value || !report.value.id) {
+    const reportId = route.params.id as string;
+    try {
+      const response = await apiReports.get(`/${reportId}`);
+      report.value = response.data;
+      reportStore.setReport(report.value as Report);
+    } catch (error) {
+      console.error('Errore nel recupero del report:', error);
+      //router.push({ name: 'dashboard-amministrazione' });
+      return;
+    }
+  }
+  
   mapActions.clearMarkers();
-  setTimeout(() => mapActions.addMarker(report.coordinate));
+  if (report.value?.coordinate) {
+    setTimeout(() => mapActions.addMarker(report.value!.coordinate));
+  }
 }
 
 async function salvaModifiche(){
-  try {  
-    const request =
-    {id: null, assegnatario: null, stato: ReportStatus.OPEN, annotazioni: null};
+  try {
+
+    (report.value?.id_gruppo != null || report.value?.id_gruppo != 0) ? report.value.stato = ReportStatus.IN_PROGRESS : report.value.stato = ReportStatus.OPEN;
     
-    const response = await api.post('/api/reports/change', request);
-    if(response.status == HttpStatusCode.Created)
-    {
+    const response = await apiReports.put('/change', report.value);
+    
+    if(response.status == 200){
       let element = document.getElementById('report-ok');
       
       if(element) {
-        element.style.display = 'block';
-        new Notification(element, {timeout: 5000});
+        element.style.display = 'block'
+        new Notification(element);
+        setTimeout(() => {
+          element.style.display = 'none';
+        }, 5000);
       }
     }     
-  } catch {
-
+  } catch {    
     let element = document.getElementById('report-ko');
+
     if(element) {
       element.style.display = 'block';
-      new Notification(element, {timeout: 5000});
+      new Notification(element);
+      setTimeout(() => {
+        element.style.display = 'none';
+      }, 5000);
+    }    
+  }
+}
+
+async function risolviSegnalazione(id: string) {
+  const response = await apiReports.patch(`/resolve/${id}`);
+  if(response.status == 200){
+    let element = document.getElementById('report-risolto');    
+    if(element) {
+      element.style.display = 'block'
+      new Notification(element);
+      setTimeout(() => { 
+         router.push({ name: 'dashboard-amministrazione' })
+      }, 3000);
     }
-    
+  } else {
+    let element = document.getElementById('report-ko');    
+    if(element) {
+      element.style.display = 'block'
+      new Notification(element);
+      setTimeout(() => {
+        element.style.display = 'none';
+      }, 3000);
+    }
+  }
+}
+
+async function eliminaReport(id: string) {
+  const response = await apiReports.delete(`/${id}`);
+ if(response.status == 200){
+    let element = document.getElementById('report-eliminato');    
+    if(element) {
+      element.style.display = 'block'
+      new Notification(element);
+      setTimeout(() => {
+        router.push({ name: 'dashboard-amministrazione' });
+      }, 3000);
+    }
+  } else {
+    let element = document.getElementById('report-ko');    
+    if(element) {
+      element.style.display = 'block'
+      new Notification(element);
+      setTimeout(() => {
+        element.style.display = 'none';
+      }, 3000);
+    }
   }
 
+}
+
+function goToElencoReport() {
+  router.push({ name: 'dashboard-amministrazione' });
 }
 </script>
 
 <template>
-  <!-- <div class="notification top-fix with-icon success" role="alert" id="report-ok" style="display: none;">
-    <h2 class="h5"><svg class="icon"><use href="/bi-icons.svg#it-check-circle"></use></svg>Segnalazione inviata con successo!</h2>
+  <div class="notification top-fix with-icon success" role="alert" id="report-ok" style="display: none;">
+    <h2 class="h5"><svg class="icon"><use href="/bi-icons.svg#it-check-circle"></use></svg>Report modificato con successo</h2>
   </div>
   <div class="notification top-fix with-icon error" role="alert" id="report-ko" style="display: none;">
-    <h2 class="h5"><svg class="icon"><use href="/bi-icons.svg#it-close-circle"></use></svg>Errore nell'invio della segnalazione</h2>
-  </div> -->
-  
- 
+    <h2 class="h5"><svg class="icon"><use href="/bi-icons.svg#it-close-circle"></use></svg>Errore nella modifica del report</h2>
+  </div>
+  <div class="notification top-fix with-icon success" role="alert" id="report-risolto" style="display: none;">
+    <h2 class="h5"><svg class="icon"><use href="/bi-icons.svg#it-check-circle"></use></svg>Report contrassegnato come risolto</h2>
+  </div>
+  <div class="notification top-fix with-icon error" role="alert" id="report-eliminato" style="display: none;">
+    <h2 class="h5"><svg class="icon"><use href="/bi-icons.svg#it-check-circle"></use></svg>Report eliminato con successo</h2>
+  </div>
+
   <div class="container mb-5 mt-2 pt-2">
     <div class="row">      
       <div class="col-12" style="display: flex; justify-content: space-between; align-items: center;">
@@ -96,8 +184,8 @@ async function salvaModifiche(){
           </span>        
       </div>      
     </div>
-    <p style="color:gray">Report {{ report.id.slice(0, 8) }} creato il {{ new Date(report.data_inserimento).toLocaleDateString('it-IT') }}</p>
-    <hr>
+    <p style="color:gray">Report {{ route.params.id.slice(0, 8) }} creato il {{ new Date(report.data_inserimento).toLocaleDateString('it-IT') }}</p>
+    <hr>     
     <div class="spacer"></div>
     <div class="row">
     <div class="col-12 col-md-4">
@@ -130,7 +218,7 @@ async function salvaModifiche(){
         <div class="select-wrapper">
           <label for="gruppoSelector">Gruppo incaricato</label>
           <select id="gruppoSelector" class="form-control" v-model="report.id_gruppo">              
-            <option v-for="group in gruppi" value="{{ group.id }}">{{ group.codice }} - {{ group.nome }}</option>     
+            <option v-for="group in gruppi" :value="group.id">{{ group.codice }} - {{ group.nome }}</option>     
           </select>
         </div>
       </div>
@@ -168,11 +256,23 @@ async function salvaModifiche(){
     </div> -->
     <div class="row">
       <div class="col-12">
-        <button class="btn btn-primary mt-3" type="submit" @click="salvaModifiche()">Salva modifiche</button>
+        <div style="display: flex; justify-content: space-between; gap: 10px">
+          <button class="btn btn-primary mt-3" type="submit" @click="salvaModifiche()">Salva modifiche</button>
+          <div style="display: flex; gap: 10px">
+            <!-- RISOLTO -->
+            <div v-if="report.stato == ReportStatus.IN_PROGRESS || report.stato == ReportStatus.OPEN">
+              <button class="btn btn-success mt-3" type="submit" @click="risolviSegnalazione(report.id)">Risolto</button>
+            </div>
+            <!-- ELIMINA -->
+            <button class="btn btn-danger mt-3" type="submit" @click="eliminaReport(report.id)">Elimina</button>
+          </div>
+        </div>
+        </div>
       </div>
     </div>
-  </div>
 
+    <a class="btn btn-link" v-on:click="goToElencoReport()" role="button">Torna all'elenco report</a>   
+  
 </template>
 
 <style scoped>

@@ -17,7 +17,7 @@ authClient.useSession()
     <div class="row h-100">
 
       <!-- COLONNA SINISTRA -->
-      <div class="col-4 d-flex">
+      <div class="col-4 d-flex fix-column">
         <MapItem/>
       </div>
 
@@ -32,7 +32,7 @@ authClient.useSession()
 
       <!-- Riga inferiore (1/3 dell'altezza) -->
       <div class="col-md-12 d-flex bg-light" >
-        <FeedRssItem></FeedRssItem>
+        <!-- <FeedRssItem></FeedRssItem> -->
         <!-- Riga inferiore (1/3) -->
       </div>
      </div>
@@ -48,17 +48,15 @@ authClient.useSession()
     src: url('@/assets/fonts/Titillium_Web/titillium-web-v10-latin-ext_latin-700.woff2') format('woff2');
   }
 
+  .fix-column {
+    height: 100vh;
+  }
+
   html, body {
       height: 100vh;
       display: flex;
       flex-direction: column;
       overflow: hidden;
     }
-    /* .full-height {
-      height: 100vh;
-    }
-    .half-height {
-      height: 50%;
-    } */
 
 </style>

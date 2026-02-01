@@ -9,8 +9,9 @@ import { CategoriaEnum } from '@/models/categoria.enum';
 const mapStore = useMapStore();
 const currentUserStore = useCurrentUserStore();
 const api = axios.create({
-  baseURL: 'http://localhost:3000/api/reports'
-})
+  baseURL: 'http://localhost:3000/api/reports',
+  withCredentials: true,
+});
 
 const report = ref({  
   tipo: '',

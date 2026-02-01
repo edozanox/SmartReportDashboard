@@ -32,13 +32,23 @@ function resetState() {
   isLoading.value = false;
 }
 
+async function hashPassword(plainPassword: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(plainPassword);
+  const hash = await crypto.subtle.digest('SHA-256', data);
+  return Array.from(new Uint8Array(hash))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
+}
+
 async function handleSignIn() {
   resetState();
   isLoading.value = true;
 
+  const hashedPassword = await hashPassword(password.value);
   const { data , error } = await authClient.signIn.email({
     email: email.value,
-    password: password.value,
+    password: hashedPassword,
   }) as UserDataPayload;
 
   isLoading.value = false;
@@ -80,10 +90,11 @@ async function handleSignUp() {
      return;
   }
 
+  const hashedPassword = await hashPassword(password.value);
   const payload: UserDataPayload = {
     name: name.value,
     email: email.value,
-    password: password.value,    
+    password: hashedPassword,    
     phone: telefono.value,
     role: ruolo.value,
   };
@@ -178,10 +189,8 @@ function toggleMode() {
           <label for="selettoreRuolo">Ruolo</label>
           <select id="selettoreRuolo" class="form-control" v-model="ruolo">
             <option value="">--</option>
-            <option value="0">Cittadino</option>
-            <option value="1">Osservatore</option>
-            <option value="2">Operatore</option>
-            <option value="3">Amministratore</option>
+            <option value="ADMIN">Amministratore</option>
+            <option value="USER">Cittadino</option>
           </select>
         </div>
                           

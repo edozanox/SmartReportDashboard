@@ -102,7 +102,7 @@ onMounted(() => {
 }
     
     .info-title {
-      font-size: 1.4rem;
+      font-size: 20px;
       font-weight: 700;
       margin-bottom: 0.8rem;
       color: #1a1a1a;

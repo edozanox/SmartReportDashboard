@@ -1,8 +1,8 @@
 const connection = require('./db');
+const crypto = require('crypto');
 
 module.exports.postReport = async function (req, res) {
     try {
-        console.log('Ricevuto corpo della richiesta:', req.body);
         const uuid = crypto.randomUUID();    
         const {utenteId, categoria, indirizzo, descrizione, coordinate, data_inserimento, email, telefono, stato} = req.body;
         const result = await (await connection).query(
@@ -23,8 +23,8 @@ module.exports.putReport = async function (req, res) {
         const values = [id_gruppo, stato, annotazioni];
         const query = 'UPDATE reports SET id_gruppo = ?, stato = ?, annotazioni = ? WHERE id = ?';
         const result = await (await connection).query(query, [...values, req.body.id]);
-        console.log('Report aggiornato con successo!', result);              
-        return res.json({success: true})       
+        console.log('Report aggiornato con successo!');              
+        return {success: true};     
     }
     catch  (error) {
         console.error('Errore durante l\'aggiornamento del report:', error);
@@ -32,15 +32,32 @@ module.exports.putReport = async function (req, res) {
     }
 }
 
-module.exports.reportsByUser = async function (req, res) {  
-   const [reports] = await (await connection).query('SELECT * FROM reports WHERE id_utente = ?', [req.params.userId]);   
-   return reports;
+module.exports.resolveReport = async function (req, res) {
+    try {
+        const query = 'UPDATE reports SET stato = 2 WHERE id = ?';
+        const result = await (await connection).query(query, [req.params.id]);        
+        return {success: true};
+    }
+    catch  (error) {
+        console.error('Errore durante l\'aggiornamento del report:', error);
+        return res.status(500).json({success: false, error: error.message})
+    }
 }
+
+module.exports.reportsByUserId = async function (req, res) { 
+    const [reports] = await (await connection).query('SELECT * FROM reports WHERE id_utente = ?', [req.user.id]);   
+    return reports;
+}
+
+module.exports.getReportById = async function (req, res) {
+    const [report] = await (await connection).query('SELECT * FROM reports WHERE id = ?', [req.user.id]);   
+    return report;
+};
 
 module.exports.getReportsByFilters = async function (req, res) {
     try {
         const { id_utente, stato, id_gruppo, categoria, page = 1 } = req.body;
-        const pageSize = 3;
+        const pageSize = 5;
         const offset = (page - 1) * pageSize;
         
         const whereClauses = [];
@@ -105,7 +122,7 @@ module.exports.getReportsByFilters = async function (req, res) {
 
 module.exports.allReports = async function (req, res) {
    const page = req.query.page ? parseInt(req.query.page) : 1;
-   const pageSize = 3;
+   const pageSize = 5;
    const offset = (page - 1) * pageSize;
    
    // Conta il totale
@@ -127,4 +144,7 @@ module.exports.allReports = async function (req, res) {
    };
 }
 
-
+module.exports.deleteReportById = async function (req, res) {
+    const [report] = await (await connection).query('DELETE FROM reports WHERE id = ?', [req.params.id]);   
+    return report;
+};

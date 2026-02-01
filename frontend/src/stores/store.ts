@@ -41,7 +41,7 @@ export const useReportStore = defineStore('report', () => {
 export const useCurrentUserStore = defineStore('currentUser', () => {
   const id = ref('');
   const name = ref('');
-  const role = ref();
+  const role = ref('');
   const setUserInfo = (userId: string, userName: string, userRole: RuoliEnum) => {
     id.value = userId;
     name.value = userName;

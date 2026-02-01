@@ -40,12 +40,12 @@ const router = createRouter({
       },
     },
     {
-      path: '/reports/dettaglio',
+      path: '/reports/dettaglio/:id',
       name: 'dettagli-segnalazione',
       component: ExistingReportItem, 
       meta: {
         requiresAuth: true,
-        requiredRoles: [RuoliEnum.AMMINISTRATORE, RuoliEnum.OPERATORE, RuoliEnum.OSSERVATORE]
+        requiredRoles: [RuoliEnum.AMMINISTRATORE]
       },
     },
     {
@@ -58,7 +58,7 @@ const router = createRouter({
 });
 
 // Helper per verificare i ruoli
-const hasRequiredRole = (userRole: number, requiredRoles: RuoliEnum[] | undefined): boolean => {
+const hasRequiredRole = (userRole: string, requiredRoles: RuoliEnum[] | undefined): boolean => {
   if (!requiredRoles || requiredRoles.length === 0) {
     return true;
   }
@@ -73,18 +73,28 @@ router.beforeEach(async (to, from, next) => {
 
   try {
     
-    const response = await authClient.getSession() as UserDataPayload;    
-    const { data: session } = response;
-    const isAuthenticated = !!session; // La sessione è autenticata se `session` non è null/undefined
-
-    // 🔑 Ripristina i dati dell'utente nello store se la sessione è valida
     const userStore = useCurrentUserStore();
-    if (isAuthenticated && session.user) {
-      userStore.setUserInfo(
-        session.user.id,
-        session.user.name,
-        session.user.role
-      );
+    let session: any = null;
+    let isAuthenticated = false;
+
+    // Se l'utente è già nello store, non richiamare getSession (ottimizzazione)
+    if (userStore.id) {
+      isAuthenticated = true;
+    } else {
+      // Altrimenti, recupera la sessione dal server
+      const response = await authClient.getSession() as UserDataPayload;    
+      const { data } = response;
+      session = data;
+      isAuthenticated = !!session;
+
+      // 🔑 Ripristina i dati dell'utente nello store se la sessione è valida
+      if (isAuthenticated && session.user) {
+        userStore.setUserInfo(
+          session.user.id,
+          session.user.name,
+          session.user.role
+        );
+      }
     }
 
     const userRole = userStore.role;
@@ -105,8 +115,28 @@ router.beforeEach(async (to, from, next) => {
 
     // ✅ Utente già autenticato che prova ad accedere a /login
     if (!requiresAuth && isAuthenticated && to.name === 'login') {
-      console.log(`Utente già autenticato. Reindirizzamento a /home.`);
-      next({ name: 'home' });
+      console.log(`Utente già autenticato. Reindirizzamento alla dashboard.`);
+      // Reindirizza alla dashboard appropriata in base al ruolo
+      if (userRole === RuoliEnum.AMMINISTRATORE) {
+        next({name: 'dashboard-amministrazione'});
+      } else if (userRole === RuoliEnum.CITTADINO) {
+        next({name: 'dashboard-cittadino'});
+      } else {
+        next({ name: 'home' });
+      }
+      return;
+    }
+
+    // Se l'utente è loggato e vai alla home, reindirizza alla dashboard appropriata
+    if (isAuthenticated && to.name === 'home' || isAuthenticated && to.name === '') {
+      console.log(`Utente loggato sulla home. Reindirizzamento alla dashboard.`);
+      if (userRole === RuoliEnum.AMMINISTRATORE) {
+        next({name: 'dashboard-amministrazione'});
+      } else if (userRole === RuoliEnum.CITTADINO) {
+        next({name: 'dashboard-cittadino'});
+      } else {
+        next(); // Se ha un ruolo non riconosciuto, lascia passare
+      }
       return;
     }
 

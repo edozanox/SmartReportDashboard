@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { authClient } from '@/lib/auth-client';
-import { RuoliEnum } from '@/models/ruoli.enum';
 import { resetAllStores, useCurrentUserStore } from '@/stores/store';
 
 const currentUserStore = useCurrentUserStore();
@@ -36,7 +35,7 @@ function logout() {
             </a>
           </div>
           <div class="it-header-slim-right-zone">
-            <div class="user-info">{{currentUserStore.name}} - <i><small>{{RuoliEnum[currentUserStore.role]}}</small></i></div>
+            <div class="user-info">{{currentUserStore.name}} - <i><small>{{ currentUserStore.role }}</small></i></div>
           <div class="it-user-wrapper dropdown text-center">
             <button class="btn btn-dropdown dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
               <a>
@@ -74,5 +73,6 @@ function logout() {
 
   .user-info {
     color: white;
+    margin-right: 5px;
   }
 </style>

@@ -1,6 +1,7 @@
 export enum RuoliEnum {
-    CITTADINO,
-    OSSERVATORE,
-    OPERATORE,
-    AMMINISTRATORE,
+    AMMINISTRATORE = 'ADMIN',
+    CITTADINO = 'USER',
+    // OSSERVATORE,
+    // OPERATORE,
+    
 }
