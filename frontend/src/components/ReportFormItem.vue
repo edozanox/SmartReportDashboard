@@ -46,7 +46,7 @@ async function inviaReport(){
       telefono: report.value.telefono,
       annotazioni: null
     }
-    console.log(request);
+    
     const response = await api.post('/send', request);
     if(response.status == HttpStatusCode.Created)
     {
